@@ -6,7 +6,7 @@ def calc_metric(metric, metric_name, g, **kwargs):
     return pd.DataFrame.from_dict( metric(g, **kwargs), orient='index').rename(columns={0: metric_name})
 
 def compute_rank(col, order='ascending'):
-.    return col.rank(ascending=(order == 'ascending'))
+    return col.rank(ascending=(order == 'ascending'))
 
 
 def compute_rank(col, order='ascending'):

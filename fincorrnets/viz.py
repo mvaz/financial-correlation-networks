@@ -1,17 +1,92 @@
-from bokeh.plotting import *
-from bokeh.objects import HoverTool, ColumnDataSource
-from bokeh.sampledata.les_mis import data
-
-from collections import OrderedDict
-
-import scipy.cluster.hierarchy as sch
-import seaborn as sns
+__author__ = 'Miguel Vaz'
 
 import numpy as np
-
-from IPython.html import widgets
+import pandas as  pd
 
 import networkx as nx
+from bokeh.objects import HoverTool, ColumnDataSource
+
+
+def edges_datasource(g, layout=None, line_width=None, line_color=None):
+    """
+    Creates a bokeh ColumnDataSource with the computed parameters for drawing.
+    Namely, it sets the values 'x0', 'x1', 'y0', 'y1', 'line_width', 'line_color' for each of the edges of the graph.
+
+    :param g: a networkx graph to draw
+    :param layout: a layout dictionary, as computed by he networkx.layout functions
+    :param line_width:
+    :param line_color:
+    :return: a ColumnDataSource and a corresponding DataFrame, where each row is a
+    """
+    if layout is None:
+        layout = nx.layout.spring_layout(g)
+
+    df_layout = pd.DataFrame(layout, index=['x', 'y']).T
+
+    if line_width is None:
+        f_weight = lambda x: x
+    elif hasattr(line_width, '__call__'):
+        f_weight = line_width
+    else:
+        f_weight = lambda x: line_width
+
+    if line_color is None:
+        f_color = lambda x: x
+    elif hasattr(line_color, '__call__'):
+        f_color = line_color
+    else:
+        f_color = lambda x: line_color
+
+    df_edges = pd.DataFrame(((df_layout.x[e[0]],
+                              df_layout.y[e[0]],
+                              df_layout.x[e[1]],
+                              df_layout.y[e[1]],
+                              f_weight(e[2].get('weight', 1)),
+                              f_color(e[2].get('weight', 1))
+                              ) for e in g.edges_iter(data=True, default={'weight': 1})),
+                            columns=['x0', 'y0', 'x1', 'y1', 'line_width', 'line_color'])
+
+    return ColumnDataSource(df_edges), df_edges
+
+
+def nodes_datasource(g, layout=None):
+    """
+
+    :param g:
+    :param layout:
+    :return:
+    """
+    if layout is None:
+        layout = nx.layout.spring_layout(g)
+
+    df_layout = pd.DataFrame(layout, index=['x', 'y']).T
+    df_layout['size'] = 10
+
+    return ColumnDataSource(df_layout), df_layout
+
+
+def plot_edges(fig, ds=None, line_alpha=0.3):
+    """
+
+    :param fig:
+    :param ds:
+    :param line_alpha:
+    :return:
+    """
+    segments = fig.segment('x0', 'y0', 'x1', 'y1', color='grey', line_width='line_width', alpha=line_alpha, source=ds)
+    return segments
+
+
+def plot_nodes(fig, ds=ds_nodes):
+    """
+
+    :param fig:
+    :param ds:
+    :return:
+    """
+    circles = p.scatter('x', 'y', marker='circle', size='size', line_color="navy", fill_color="color", alpha=0.8,
+                        source=ds)
+    return circles
 
 
 def prepare_datasources(G, **kwargs):

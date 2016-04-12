@@ -4,7 +4,7 @@ import numpy as np
 import pandas as  pd
 
 import networkx as nx
-from bokeh.objects import HoverTool, ColumnDataSource
+from bokeh.models import ColumnDataSource
 
 
 def edges_datasource(g, layout=None, line_width=None, line_color=None):
@@ -77,15 +77,15 @@ def plot_edges(fig, ds=None, line_alpha=0.3):
     return segments
 
 
-def plot_nodes(fig, ds=ds_nodes):
+def plot_nodes(fig, ds=None):
     """
 
     :param fig:
     :param ds:
     :return:
     """
-    circles = p.scatter('x', 'y', marker='circle', size='size', line_color="navy", fill_color="color", alpha=0.8,
-                        source=ds)
+    circles = fig.scatter('x', 'y', marker='circle', size='size', line_color="navy", fill_color="color", alpha=0.8,
+                          source=ds)
     return circles
 
 

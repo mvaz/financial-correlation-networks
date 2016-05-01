@@ -5,6 +5,7 @@ import pandas as  pd
 
 import networkx as nx
 from bokeh.models import ColumnDataSource
+from bokeh.plotting import figure
 
 
 def edges_datasource(g, layout=None, line_width=None, line_color=None):
@@ -65,6 +66,32 @@ def nodes_datasource(g, layout=None):
     return ColumnDataSource(df_layout), df_layout
 
 
+def plot_graph(g, fig=None, plot_width=600, plot_height=600, layout=None):
+    """
+
+    :param g:
+    :param fig:
+    :param plot_width:
+    :param plot_height:
+    :param layout:
+    :return:
+    """
+    if fig is None:
+        fig = figure(plot_width=plot_width, plot_height=plot_height)
+
+    if layout is None:
+        layout = nx.layout.circular_layout(g)
+
+    ds_edges, df_edges = edges_datasource(g, layout=layout, line_width=lambda x: 3 * x)
+    ds_nodes, df_nodes = nodes_datasource(g, layout=layout)
+
+    plot_edges(fig, ds=ds_edges)
+    plot_nodes(fig, ds=ds_nodes)
+
+    # show the results
+    return fig, ds_edges, ds_nodes, layout
+
+
 def plot_edges(fig, ds=None, line_alpha=0.3):
     """
 
@@ -86,7 +113,8 @@ def plot_nodes(fig, ds=None):
     """
     circles = fig.scatter('x', 'y', marker='circle', size='size', line_color="navy", fill_color="color", alpha=0.8,
                           source=ds)
-    return circles
+    labels = fig.text('x', 'y', text='index', source=ds, text_font_size="10pt")
+    return circles, labels
 
 
 def prepare_datasources(G, **kwargs):

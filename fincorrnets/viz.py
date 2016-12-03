@@ -50,7 +50,7 @@ def edges_datasource(g, layout=None, line_width=None, line_color=None):
     return ColumnDataSource(df_edges), df_edges
 
 
-def nodes_datasource(g, layout=None):
+def nodes_datasource(g, layout=None, color=None, node_size=5):
     """
 
     :param g:
@@ -60,8 +60,26 @@ def nodes_datasource(g, layout=None):
     if layout is None:
         layout = nx.layout.spring_layout(g)
 
+
+    palette = ['#a6cee3', '#1f78b4', '#b2df8a', '#33a02c', '#fb9a99', '#e31a1c',
+               '#fdbf6f', '#ff7f00', '#cab2d6', '#6a3d9a', '#ffff99', '#b15928']
+
     df_layout = pd.DataFrame(layout, index=['x', 'y']).T
-    df_layout['size'] = 10
+
+    if node_size is None:
+        df_layout['size'] = default_node_size
+    else:
+        df_layout['size'] = node_size
+    
+    if color is None:
+        f_color = lambda c_idx: palette[c_idx % len(palette)] 
+        colors = dict((n,f_color(component)) for component, nodes in enumerate(nx.connected_components(g)) for n in nodes)
+        # print(colors)
+
+        df_layout['color'] = pd.Series(colors)
+    else:
+        df_layout['color'] = color
+        
 
     return ColumnDataSource(df_layout), df_layout
 
@@ -78,11 +96,14 @@ def plot_graph(g, fig=None, plot_width=600, plot_height=600, layout=None):
     """
     if fig is None:
         fig = figure(plot_width=plot_width, plot_height=plot_height)
+        fig.grid.grid_line_color = None
+        fig.axis.visible = None
+        fig.outline_line_alpha = 0
 
     if layout is None:
         layout = nx.layout.circular_layout(g)
 
-    ds_edges, df_edges = edges_datasource(g, layout=layout, line_width=lambda x: 3 * x)
+    ds_edges, df_edges = edges_datasource(g, layout=layout)
     ds_nodes, df_nodes = nodes_datasource(g, layout=layout)
 
     plot_edges(fig, ds=ds_edges)
@@ -104,16 +125,17 @@ def plot_edges(fig, ds=None, line_alpha=0.3):
     return segments
 
 
-def plot_nodes(fig, ds=None):
+def plot_nodes(fig, ds=None, draw_labels=False):
     """
 
     :param fig:
     :param ds:
     :return:
     """
-    circles = fig.scatter('x', 'y', marker='circle', size='size', line_color="navy", fill_color="color", alpha=0.8,
-                          source=ds)
-    labels = fig.text('x', 'y', text='index', source=ds, text_font_size="10pt")
+    circles = fig.circle('x', 'y', size='size', color="color", alpha=0.8, source=ds)
+    labels = None
+    if draw_labels:
+        labels = fig.text('x', 'y', text='index', source=ds, text_font_size="10pt")
     return circles, labels
 
 

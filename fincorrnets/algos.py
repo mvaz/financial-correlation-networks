@@ -4,8 +4,35 @@ import pandas as pd
 import networkx as nx
 
 
-def compute_distance(correlation_matrix):
+def compute_distance(correlation_matrix, method=None):
+    """
+
+    :param correlation_matrix:
+    :param method:
+    :return:
+    """
     return np.sqrt(2 * np.clip(1. - correlation_matrix ** 2, 0., 2.))
+
+
+def gower_distance(correlation_matrix):
+    """
+
+    :param correlation_matrix:
+    :return:
+    """
+    return np.sqrt(2 * np.clip(1. - correlation_matrix, 0., 2.))
+
+
+def fisher_distance(correlation_matrix):
+    """
+    Computes the Fisher distance from the correlation matrix. This distance is in the
+    range [0,1].
+
+
+    :param correlation_matrix:
+    :return:
+    """
+    return np.clip(1. - correlation_matrix ** 2, 0., 1.)
 
 
 def construct_pmfg(df_corr_matrix):
